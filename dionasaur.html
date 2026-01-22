@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hypoetry - An Immersive Poetry Experience</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400&amp;family=Lora:ital,wght@0,400;0,500;1,400&amp;family=Inter:wght@300;400&amp;display=swap" rel="stylesheet">
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+    
+    :root {
+      --warm-dawn: #fff5e6;
+      --soft-peach: #ffe4cc;
+      --gentle-rose: #ffd4cc;
+      --twilight-blue: #d4e4f7;
+      --moonlit-purple: #e6d9f0;
+      --deep-night: #2d2838;
+      --text-warm: #5a4a3a;
+      --text-light: #f5ece3;
+      --accent-gold: #d4a574;
+    }
+    
+    .font-poetry {
+      font-family: 'Lora', Georgia, serif;
+    }
+    
+    .font-heading {
+      font-family: 'Crimson Pro', Georgia, serif;
+    }
+    
+    .font-ui {
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
+    
+    /* Smooth scrolling */
+    html {
+      scroll-behavior: smooth;
+    }
+    
+    .scroll-container {
+      position: relative;
+      height: 100%;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    
+    /* Background transitions */
+    .scene-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 0;
+      pointer-events: none;
+    }
+    
+    .scene-bg.active {
+      opacity: 1;
+    }
+    
+    .scene-bg:not(.active) {
+      opacity: 0;
+    }
+    
+    /* Dawn scene */
+    .scene-dawn {
+      background: linear-gradient(180deg, #fff9f0 0%, #ffe8d4 40%, #ffd4b8 100%);
+    }
+    
+    /* Galaxy scene */
+    .scene-galaxy {
+      background: linear-gradient(180deg, #1a1530 0%, #2d1b4e 30%, #4a2d6e 60%, #6b4a8a 100%);
+    }
+    
+    /* Warmth scene */
+    .scene-warmth {
+      background: linear-gradient(180deg, #ffe4cc 0%, #ffd4b8 30%, #ffb89d 70%, #ff9e82 100%);
+    }
+    
+    /* Shelter scene */
+    .scene-shelter {
+      background: linear-gradient(180deg, #5a7a9e 0%, #7590b0 40%, #8fa4bd 70%, #a8b9cc 100%);
+    }
+    
+    /* Heart scene */
+    .scene-heart {
+      background: linear-gradient(180deg, #ffd4e6 0%, #ffb8d4 30%, #ff9dc2 70%, #ff82b0 100%);
+    }
+    
+    /* Forever scene */
+    .scene-forever {
+      background: linear-gradient(180deg, #2d2838 0%, #3d3448 40%, #4d4058 70%, #5d4c68 100%);
+    }
+    
+    /* Floating animations */
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      33% { transform: translate(10px, -15px) rotate(2deg); }
+      66% { transform: translate(-8px, -10px) rotate(-2deg); }
+    }
+    
+    @keyframes floatSlow {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(0, -20px); }
+    }
+    
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.3); }
+    }
+    
+    @keyframes drift {
+      0% { transform: translateX(-100px) translateY(0); opacity: 0; }
+      10% { opacity: 0.6; }
+      90% { opacity: 0.6; }
+      100% { transform: translateX(100vw) translateY(-50px); opacity: 0; }
+    }
+    
+    @keyframes gentlePulse {
+      0%, 100% { transform: scale(1); opacity: 0.6; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+    }
+    
+    .float-gentle {
+      animation: float 8s ease-in-out infinite;
+    }
+    
+    .float-slow {
+      animation: floatSlow 6s ease-in-out infinite;
+    }
+    
+    .twinkle {
+      animation: twinkle 3s ease-in-out infinite;
+    }
+    
+    .drift-cloud {
+      animation: drift 40s linear infinite;
+    }
+    
+    .pulse-gentle {
+      animation: gentlePulse 3s ease-in-out infinite;
+    }
+    
+    /* Content sections */
+    .poem-section {
+      position: relative;
+      z-index: 1;
+      min-height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 1.5rem;
+    }
+    
+    /* Verse reveal */
+    .verse {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .verse.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    /* Interactive link styling */
+    .song-link {
+      position: relative;
+      text-decoration: none;
+      color: inherit;
+      background: linear-gradient(to right, var(--accent-gold) 0%, var(--accent-gold) 100%);
+      background-size: 0% 2px;
+      background-repeat: no-repeat;
+      background-position: left bottom;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      padding-bottom: 2px;
+    }
+    
+    .song-link:hover {
+      background-size: 100% 2px;
+      color: var(--accent-gold);
+      text-shadow: 0 0 20px rgba(212, 165, 116, 0.4);
+    }
+    
+    /* Decorative elements */
+    .cat-silhouette {
+      position: absolute;
+      opacity: 0.15;
+      pointer-events: none;
+    }
+    
+    .star {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      background: white;
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+    }
+    
+    /* Scroll hint */
+    .scroll-hint {
+      animation: floatSlow 2s ease-in-out infinite;
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full font-poetry"><!-- Background Scenes -->
+  <div id="scene-dawn" class="scene-bg scene-dawn active"><!-- Floating paw prints -->
+   <svg class="absolute top-20 left-10 w-12 h-12 opacity-20 float-gentle" style="animation-delay: 0s" viewbox="0 0 24 24" fill="currentColor"><ellipse cx="12" cy="17" rx="5" ry="4" fill="#d4a574" /> <circle cx="7" cy="10" r="2.5" fill="#d4a574" /> <circle cx="17" cy="10" r="2.5" fill="#d4a574" /> <circle cx="5" cy="14" r="2" fill="#d4a574" /> <circle cx="19" cy="14" r="2" fill="#d4a574" />
+   </svg>
+   <svg class="absolute bottom-32 right-16 w-10 h-10 opacity-20 float-gentle" style="animation-delay: -3s" viewbox="0 0 24 24" fill="currentColor"><ellipse cx="12" cy="17" rx="5" ry="4" fill="#d4a574" /> <circle cx="7" cy="10" r="2.5" fill="#d4a574" /> <circle cx="17" cy="10" r="2.5" fill="#d4a574" /> <circle cx="5" cy="14" r="2" fill="#d4a574" /> <circle cx="19" cy="14" r="2" fill="#d4a574" />
+   </svg>
+  </div>
+  <div id="scene-galaxy" class="scene-bg scene-galaxy"><!-- Stars -->
+   <div class="star top-20 left-1/4 twinkle" style="animation-delay: 0s"></div>
+   <div class="star top-40 right-1/3 twinkle" style="animation-delay: -0.5s"></div>
+   <div class="star top-60 left-1/2 twinkle" style="animation-delay: -1s"></div>
+   <div class="star bottom-40 left-1/3 twinkle" style="animation-delay: -1.5s"></div>
+   <div class="star top-1/3 right-20 twinkle" style="animation-delay: -2s"></div>
+   <div class="star bottom-1/3 right-1/4 twinkle" style="animation-delay: -2.5s"></div>
+   <div class="star top-1/2 left-20 twinkle" style="animation-delay: -3s"></div><!-- Galaxy swirl -->
+   <svg class="absolute top-1/4 right-1/4 w-64 h-64 opacity-10 float-slow" viewbox="0 0 200 200" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"><circle cx="100" cy="100" r="20" /> <circle cx="100" cy="100" r="40" /> <circle cx="100" cy="100" r="60" /> <circle cx="100" cy="100" r="80" />
+   </svg>
+  </div>
+  <div id="scene-warmth" class="scene-bg scene-warmth"><!-- Warm glow circles -->
+   <div class="absolute top-1/4 left-1/3 w-96 h-96 rounded-full bg-gradient-radial from-orange-200 to-transparent opacity-20 pulse-gentle"></div>
+   <div class="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-gradient-radial from-rose-200 to-transparent opacity-20 pulse-gentle" style="animation-delay: -1.5s"></div><!-- Sleeping cat -->
+   <svg class="absolute bottom-20 left-12 w-32 h-24 opacity-25 float-gentle" viewbox="0 0 120 80" fill="#d4a574"><ellipse cx="60" cy="55" rx="50" ry="20" /> <circle cx="85" cy="40" r="18" /> <path d="M75 25 L78 35 L72 35 Z" /> <path d="M95 25 L98 35 L92 35 Z" /> <path d="M80 42 Q85 46 90 42" fill="none" stroke="#d4a574" stroke-width="2" /> <circle cx="78" cy="40" r="2" fill="#5a4a3a" /> <circle cx="92" cy="40" r="2" fill="#5a4a3a" /> <path d="M10 55 Q5 45 15 35" fill="none" stroke="#d4a574" stroke-width="10" stroke-linecap="round" />
+   </svg>
+  </div>
+  <div id="scene-shelter" class="scene-bg scene-shelter"><!-- Drifting clouds -->
+   <svg class="absolute top-20 w-32 h-20 opacity-30 drift-cloud" style="animation-delay: 0s" viewbox="0 0 200 100" fill="white"><ellipse cx="50" cy="60" rx="30" ry="20" /> <ellipse cx="80" cy="55" rx="35" ry="25" /> <ellipse cx="110" cy="60" rx="30" ry="20" />
+   </svg>
+   <svg class="absolute top-40 w-40 h-24 opacity-25 drift-cloud" style="animation-delay: -15s" viewbox="0 0 200 100" fill="white"><ellipse cx="50" cy="60" rx="30" ry="20" /> <ellipse cx="80" cy="55" rx="35" ry="25" /> <ellipse cx="110" cy="60" rx="30" ry="20" />
+   </svg><!-- House silhouette -->
+   <svg class="absolute top-1/3 left-1/4 w-28 h-28 opacity-20 float-gentle" viewbox="0 0 100 100" fill="rgba(255,255,255,0.4)"><polygon points="50,15 85,45 85,85 15,85 15,45" /> <rect x="40" y="55" width="20" height="30" /> <circle cx="50" cy="35" r="6" />
+   </svg>
+  </div>
+  <div id="scene-heart" class="scene-bg scene-heart"><!-- Floating hearts -->
+   <svg class="absolute top-1/4 right-1/3 w-12 h-12 opacity-20 pulse-gentle" viewbox="0 0 24 24" fill="#ff82b0"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+   </svg>
+   <svg class="absolute bottom-1/3 left-1/4 w-10 h-10 opacity-15 pulse-gentle" style="animation-delay: -1s" viewbox="0 0 24 24" fill="#ff82b0"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+   </svg><!-- Cat with heart -->
+   <svg class="absolute bottom-24 right-20 w-36 h-32 opacity-20 float-gentle" viewbox="0 0 140 120" fill="#ff82b0"><path d="M30 90 Q10 90 15 70 Q10 55 20 48 L28 58 Q35 53 50 56 Q65 53 70 58 L78 50 Q85 58 82 70 Q90 80 85 95 Q70 105 50 100 Q30 102 30 90 Z" /> <circle cx="38" cy="68" r="3" /> <circle cx="60" cy="68" r="3" /> <path d="M43 76 Q48 80 53 76" fill="none" stroke="#ff82b0" stroke-width="2" /> <path d="M85 60 Q88 56 92 60 Q96 56 100 60 Q100 66 92 72 Q85 66 85 60 Z" fill="#ff1493" />
+   </svg>
+  </div>
+  <div id="scene-forever" class="scene-bg scene-forever"><!-- Moon -->
+   <svg class="absolute top-20 right-1/4 w-32 h-32 opacity-30" viewbox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="rgba(255,255,255,0.8)" /> <circle cx="60" cy="40" r="38" fill="var(--deep-night)" />
+   </svg><!-- Stars -->
+   <div class="star top-24 left-1/4 twinkle" style="animation-delay: 0s"></div>
+   <div class="star top-36 right-1/3 twinkle" style="animation-delay: -0.7s"></div>
+   <div class="star top-52 left-1/2 twinkle" style="animation-delay: -1.4s"></div>
+   <div class="star bottom-32 left-1/3 twinkle" style="animation-delay: -2.1s"></div><!-- Two cats together -->
+   <svg class="absolute bottom-20 left-1/3 w-48 h-36 opacity-25 float-gentle" viewbox="0 0 180 120" fill="rgba(255,255,255,0.6)"><path d="M20 95 Q15 80 25 70 Q20 60 24 53 L30 61 Q35 57 42 57 Q50 57 55 61 L60 55 Q65 61 62 70 Q72 80 68 95 Q55 100 42 100 Q25 100 20 95 Z" /> <path d="M75 93 Q73 80 80 73 Q77 65 80 59 L85 65 Q89 62 95 62 Q102 62 107 65 L111 60 Q115 65 113 73 Q120 80 117 93 Q105 98 95 98 Q80 98 75 93 Z" /> <path d="M65 70 Q67 67 70 70 Q73 67 75 70 Q75 74 70 78 Q65 74 65 70 Z" fill="#ffb8d4" />
+   </svg>
+  </div><!-- Main Content -->
+  <div class="scroll-container h-full" id="scrollContainer"><!-- Hero Section -->
+   <section class="poem-section">
+    <div class="text-center max-w-4xl mx-auto">
+     <p id="site-title" class="font-ui text-xs tracking-widest uppercase mb-4" style="color: var(--accent-gold);">Hypoetry</p>
+     <h1 id="poem-title" class="font-heading text-5xl md:text-7xl mb-6 leading-tight" style="color: var(--text-warm);">Love that feels like home</h1>
+     <p id="subtitle" class="font-ui text-sm mb-12 opacity-70" style="color: var(--text-warm);">A journey through words and feeling</p>
+     <div class="scroll-hint">
+      <svg class="w-6 h-6 mx-auto opacity-50" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+      </svg>
+     </div>
+    </div>
+   </section><!-- Stanza 1: Galaxy -->
+   <section class="poem-section" data-scene="galaxy">
+    <div class="verse max-w-3xl mx-auto text-center px-6">
+     <p class="font-poetry text-2xl md:text-4xl leading-relaxed mb-6 italic" style="color: var(--text-light);">Only in your eyes, will galaxies shine right through</p>
+     <p class="font-poetry text-2xl md:text-4xl leading-relaxed mb-6 italic" style="color: var(--text-light);">Every loving thought and feelings of mine is only for you,</p>
+     <p class="font-poetry text-2xl md:text-4xl leading-relaxed mb-6 italic" style="color: var(--text-light);">You gave me such a warmth and comfort throughout</p>
+     <p class="font-poetry text-2xl md:text-4xl leading-relaxed italic" style="color: var(--text-light);">Loving you feels like home and that I never ever doubt</p>
+    </div>
+   </section><!-- Stanza 2: Warmth -->
+   <section class="poem-section" data-scene="warmth">
+    <div class="verse max-w-3xl mx-auto text-center px-6">
+     <p class="font-poetry text-2xl md:text-4xl leading-relaxed mb-6 italic" style="color: var(--text-warm);">A blessing it is that I could have someone like you,</p>
+     <p class="font-poetry text-2xl md:text-4xl leading-relaxed mb-6 italic" style="color: var(--text-warm);">To the point that my only wish is to <a href="https://www.youtube.com/watch?v=wKdQoLD8Wpg&list=RDwKdQoLD8Wpg&start_radio=1" target="_blank" rel="noopener noreferrer" class="song-link">be with you</a>.</p>
+     <p class="font-poetry text-2xl md:text-4xl leading-relaxed mb-6 italic" style="color: var(--text-warm);">Every single day for the rest of our lives,</p>
+     <p class="font-poetry text-2xl md:text-4xl leading-relaxed italic" style="color: var(--text-warm);">Feels like a warm presence, a love that gently arrives.</p>
+    </div>
+   </section><!-- Stanza 3: Shelter -->
+   <section class="poem-section" data-scene="shelter">
+    <div class="verse max-w-3xl mx-auto text-center px-6">
+     <p class="font-poetry text-2xl md:text-4xl leading-relaxed mb-6 italic" style="color: var(--text-warm);">So stay with me, and I'll be your safe place too,</p>
+     <p class="font-poetry text-2xl md:text-4xl leading-relaxed mb-6 italic" style="color: var(--text-warm);">I'll stand beside you in everything we go through.</p>
+     <p class="font-poetry text-2xl md:text-4xl leading-relaxed mb-6 italic" style="color: var(--text-warm);">When days feel like a storm and nights feel long,</p>
+     <p class="font-poetry text-2xl md:text-4xl leading-relaxed italic" style="color: var(--text-warm);">I'll be your shelter, your home and shoulder to lean on.</p>
+    </div>
+   </section><!-- Stanza 4: Heart -->
+   <section class="poem-section" data-scene="heart">
+    <div class="verse max-w-3xl mx-auto text-center px-6">
+     <p class="font-poetry text-2xl md:text-4xl leading-relaxed mb-6 italic" style="color: var(--text-warm);">I'll hold your heart with the softest care.</p>
+     <p class="font-poetry text-2xl md:text-4xl leading-relaxed mb-6 italic" style="color: var(--text-warm);">Listening closely to every fear you share.</p>
+     <p class="font-poetry text-2xl md:text-4xl leading-relaxed mb-6 italic" style="color: var(--text-warm);">When the world feels cold or pulls you apart,</p>
+     <p class="font-poetry text-2xl md:text-4xl leading-relaxed italic" style="color: var(--text-warm);">I'll remind you gently you're safe in my heart</p>
+    </div>
+   </section><!-- Stanza 5: Forever -->
+   <section class="poem-section" data-scene="forever">
+    <div class="verse max-w-3xl mx-auto text-center px-6">
+     <p class="font-poetry text-2xl md:text-4xl leading-relaxed mb-6 italic" style="color: var(--text-light);">For loving you is more than words I say</p>
+     <p class="font-poetry text-2xl md:text-4xl leading-relaxed mb-6 italic" style="color: var(--text-light);">Know that I will always stay and never go away</p>
+     <p class="font-poetry text-2xl md:text-4xl leading-relaxed mb-6 italic" style="color: var(--text-light);">You're the person I only want to be with</p>
+     <p class="font-poetry text-2xl md:text-4xl leading-relaxed mb-12 italic" style="color: var(--text-light);">and I'm super glad to have a life with you in it.</p>
+     <svg class="w-16 h-16 mx-auto pulse-gentle" viewbox="0 0 24 24" fill="rgba(255,184,212,0.7)"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+     </svg>
+     <p class="font-ui text-sm mt-12 tracking-widest opacity-60" style="color: var(--text-light);">— with love, always —</p>
+    </div>
+   </section><!-- Footer -->
+   <footer class="py-12 text-center" style="background: var(--deep-night);">
+    <div class="flex items-center justify-center gap-2 mb-3">
+     <svg class="w-7 h-7 opacity-40" viewbox="0 0 100 100" fill="rgba(255,255,255,0.5)"><path d="M20 80 Q20 60 30 50 Q25 40 28 30 L35 40 Q40 35 50 35 Q60 35 65 40 L72 30 Q75 40 70 50 Q80 60 80 80 Q70 85 50 85 Q30 85 20 80 Z" />
+     </svg><span class="font-ui text-xs tracking-widest uppercase" style="color: rgba(255,255,255,0.5);">Hypoetry</span>
+    </div>
+    <p class="font-poetry text-sm italic opacity-40" style="color: var(--text-light);">Where words find their heart</p>
+    <p class="font-ui text-xs mt-6 opacity-30" style="color: var(--text-light);">Music inspired by <a href="https://www.youtube.com/watch?v=wKdQoLD8Wpg&list=RDwKdQoLD8Wpg&start_radio=1" target="_blank" rel="noopener noreferrer" class="song-link" style="color: inherit;">Be With You</a> by The Ridleys</p>
+   </footer>
+  </div><!-- Music Toggle Button --> <button id="musicToggle" class="music-toggle" aria-label="Toggle background music">
+   <svg class="music-icon" id="musicIcon" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 01-.99-3.467l2.31-.66A2.25 2.25 0 009 15.553z" />
+   </svg></button> <!-- Hidden audio element (soft ambient music simulation) -->
+  <audio id="bgMusic" loop><!-- Note: Using a data URL for a simple ambient tone since we can't load external audio files --> <!-- In a real implementation, you would link to the actual "Be With You" inspired track -->
+  </audio>
+  <script>
+    const defaultConfig = {
+      site_title: 'Hypoetry',
+      poem_title: 'Love that feels like home',
+      subtitle: 'A journey through words and feeling',
+      background_color: '#fff5e6',
+      text_color: '#5a4a3a',
+      accent_color: '#d4a574',
+      link_color: '#c9945e',
+      heart_color: '#ff82b0'
+    };
+    
+    let config = { ...defaultConfig };
+    
+    // Scene management
+    const scenes = ['dawn', 'galaxy', 'warmth', 'shelter', 'heart', 'forever'];
+    let currentScene = 'dawn';
+    
+    function switchScene(sceneName) {
+      if (currentScene === sceneName) return;
+      
+      scenes.forEach(scene => {
+        const el = document.getElementById(`scene-${scene}`);
+        if (el) {
+          el.classList.remove('active');
+        }
+      });
+      
+      const newScene = document.getElementById(`scene-${sceneName}`);
+      if (newScene) {
+        newScene.classList.add('active');
+        currentScene = sceneName;
+      }
+    }
+    
+    // Scroll-based scene switching
+    function handleScroll() {
+      const sections = document.querySelectorAll('[data-scene]');
+      const scrollContainer = document.getElementById('scrollContainer');
+      const scrollPosition = scrollContainer.scrollTop + window.innerHeight / 2;
+      
+      sections.forEach(section => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = rect.top + scrollContainer.scrollTop;
+        const sectionBottom = sectionTop + section.offsetHeight;
+        
+        if (scrollPosition >= sectionTop && scrollPosition <= sectionBottom) {
+          const sceneName = section.getAttribute('data-scene');
+          if (sceneName) {
+            switchScene(sceneName);
+          }
+        }
+      });
+      
+      // Verse reveal on scroll
+      const verses = document.querySelectorAll('.verse');
+      verses.forEach(verse => {
+        const rect = verse.getBoundingClientRect();
+        if (rect.top < window.innerHeight * 0.75) {
+          verse.classList.add('visible');
+        }
+      });
+    }
+    
+    // Music control
+    let isPlaying = false;
+    const musicToggle = document.getElementById('musicToggle');
+    const bgMusic = document.getElementById('bgMusic');
+    
+    // Create a simple ambient audio context (soft background tone)
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    let oscillator = null;
+    let gainNode = null;
+    
+    function createAmbientSound() {
+      if (oscillator) return;
+      
+      oscillator = audioContext.createOscillator();
+      gainNode = audioContext.createGain();
+      
+      // Create a soft, warm ambient tone
+      oscillator.type = 'sine';
+      oscillator.frequency.value = 220; // A3 note
+      
+      gainNode.gain.value = 0.03; // Very quiet
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.start();
+    }
+    
+    function stopAmbientSound() {
+      if (oscillator) {
+        oscillator.stop();
+        oscillator = null;
+        gainNode = null;
+      }
+    }
+    
+    musicToggle.addEventListener('click', () => {
+      if (!isPlaying) {
+        createAmbientSound();
+        musicToggle.classList.add('playing');
+        isPlaying = true;
+      } else {
+        stopAmbientSound();
+        musicToggle.classList.remove('playing');
+        isPlaying = false;
+      }
+    });
+    
+    // Element SDK integration
+    async function onConfigChange(cfg) {
+      const siteTitle = document.getElementById('site-title');
+      const poemTitle = document.getElementById('poem-title');
+      const subtitle = document.getElementById('subtitle');
+      
+      if (siteTitle) {
+        siteTitle.textContent = cfg.site_title || defaultConfig.site_title;
+      }
+      
+      if (poemTitle) {
+        poemTitle.textContent = cfg.poem_title || defaultConfig.poem_title;
+      }
+      
+      if (subtitle) {
+        subtitle.textContent = cfg.subtitle || defaultConfig.subtitle;
+      }
+      
+      // Update CSS variables
+      document.documentElement.style.setProperty('--text-warm', cfg.text_color || defaultConfig.text_color);
+      document.documentElement.style.setProperty('--accent-gold', cfg.accent_color || defaultConfig.accent_color);
+    }
+    
+    function mapToCapabilities(cfg) {
+      return {
+        recolorables: [
+          {
+            get: () => cfg.background_color || defaultConfig.background_color,
+            set: (value) => {
+              cfg.background_color = value;
+              if (window.elementSdk) {
+                window.elementSdk.setConfig({ background_color: value });
+              }
+            }
+          },
+          {
+            get: () => cfg.text_color || defaultConfig.text_color,
+            set: (value) => {
+              cfg.text_color = value;
+              if (window.elementSdk) {
+                window.elementSdk.setConfig({ text_color: value });
+              }
+            }
+          },
+          {
+            get: () => cfg.accent_color || defaultConfig.accent_color,
+            set: (value) => {
+              cfg.accent_color = value;
+              if (window.elementSdk) {
+                window.elementSdk.setConfig({ accent_color: value });
+              }
+            }
+          }
+        ],
+        borderables: [],
+        fontEditable: undefined,
+        fontSizeable: undefined
+      };
+    }
+    
+    function mapToEditPanelValues(cfg) {
+      return new Map([
+        ['site_title', cfg.site_title || defaultConfig.site_title],
+        ['poem_title', cfg.poem_title || defaultConfig.poem_title],
+        ['subtitle', cfg.subtitle || defaultConfig.subtitle]
+      ]);
+    }
+    
+    // Initialize
+    const scrollContainer = document.getElementById('scrollContainer');
+    scrollContainer.addEventListener('scroll', handleScroll);
+    
+    // Initial verse reveal
+    handleScroll();
+    
+    // Initialize Element SDK
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities,
+        mapToEditPanelValues
+      });
+    }
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c1f973fe665bc5b',t:'MTc2OTA5MDU2OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
